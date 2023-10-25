@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "9-ball-Tracker"
+version = "0.1.0"
+description = ""
+authors = ["AKAAka1450 <58277892+AKAAka1450@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+opencv-python = "^4.8.0.76"
+matplotlib = "^3.8.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
