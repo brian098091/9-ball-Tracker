@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import math
 import copy
+import os
+import random
 from collections import defaultdict
 
 def segment_by_angle_kmeans(lines, k=2, **kwargs):
@@ -71,6 +73,11 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 		LOG_FILE_DIR = './log_images/'
 		LOG_IMG_NAME = lambda name: LOG_FILE_DIR + 'IMG_' + str(LOG_FILE_CNT) + '_' + name + '.jpg'
 
+		try:
+			for f in os.listdir(LOG_FILE_DIR):
+				os.remove(LOG_FILE_DIR + f)
+		except FileNotFoundError as err:
+			os.mkdir(LOG_FILE_DIR)
 		cv2.imwrite(LOG_IMG_NAME('origin_frame'), frame)
 		LOG_FILE_CNT += 1
 
@@ -113,6 +120,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 			approx = cv2.approxPolyDP(contour,epsilon,True)
 			"""
 			filtered_contours.append(contour)
+	if len(filtered_contours) == 0: return None
 	
 	if log_images:
 		copy_frame = copy.copy(frame)
@@ -125,24 +133,66 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 	# Draw contours in binary image
 
 	bin_contour = np.zeros(frame.shape[:2], np.uint8)
-	cv2.drawContours(bin_contour, filtered_contours, -1, 255, 1)
+	cv2.drawContours(bin_contour, filtered_contours, -1, 255, 2)
 
 	if log_images:
 		cv2.imwrite(LOG_IMG_NAME('binary_contours'), bin_contour)
 		LOG_FILE_CNT += 1
 
-	# Perform Houph Line Transform
-	lines = cv2.HoughLines(image = bin_contour,
-							rho = 1,
-							theta = 2 * np.pi / 180,
-							threshold = 50,
-							srn = 0,
-							stn = 0)
+	def is_bound(bound_num, line):
+		"""
+		bound_num: 0(top), 1(bottom), 2(left), 3(right)
+		"""
+		if math.radians(60) < line[0][1] < math.radians(120):
+			# horizontal line
+			if line[0][0] < frame.shape[0] / 2:
+				return bound_num == 0
+			else:
+				return bound_num == 1
+		else:
+			# vertical line
+			if abs(line[0][0]) < frame.shape[1] / 2:
+				return bound_num == 2
+			else:
+				return bound_num == 3
 
-	if log_images:			
-		# Draw the result on origin frame
+	
+	# Perform Houph Line Transform
+	bounds = [[] for i in range(4)]
+	for bound_num in range(4):
+		done = False
+		min_thresh = 100
+		max_thresh = 500
+		while not done:
+			if min_thresh > max_thresh:
+				# No boundary found
+				return None
+			thresh = min_thresh + (max_thresh - min_thresh) // 2
+			lines = cv2.HoughLines(image = bin_contour,
+									rho = 1,
+									theta = 2 * np.pi / 180,
+									threshold = thresh,
+									srn = 0,
+									stn = 0)
+
+			#print(lines)
+			bounds[bound_num] = []
+			if lines is not None:
+				for line in lines:
+					if is_bound(bound_num, line):
+						bounds[bound_num].append(line)
+			if len(bounds[bound_num]) < 1:
+				max_thresh = thresh - 1
+			elif len(bounds[bound_num]) > 1:
+				min_thresh = thresh + 1
+			else:
+				done = True
+
+	#print(bounds)
+	if log_images:
 		copy_frame = copy.copy(frame)
-		for line in lines:
+		for lines in bounds:
+			line = lines[0]
 			rho = line[0][0]
 			theta = line[0][1]
 			a = math.cos(theta)
@@ -153,9 +203,10 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 			pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
 			cv2.line(copy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
 
-		cv2.imwrite(LOG_IMG_NAME('lines_by_houph'), copy_frame)
+		cv2.imwrite(LOG_IMG_NAME('four'), copy_frame)
 		LOG_FILE_CNT += 1
 
+"""
 	segmented = segment_by_angle_kmeans(lines)
 
 	if log_images:
@@ -174,8 +225,10 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 
 		cv2.imwrite(LOG_IMG_NAME('segment_by_k-means'), copy_frame)
 		LOG_FILE_CNT += 1
-
+"""
+"""
 	intersections = segmented_intersections(segmented)
+	print(intersections)
 
 	if log_images:
 		copy_frame = copy.copy(frame)
@@ -188,6 +241,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 	if len(intersections) != 4:
 		return None
 	return intersections
+"""
 
 	
 
@@ -200,7 +254,12 @@ def getFrame(vidcap, msec):
 	return image
 
 frame = getFrame(test, 1000)
-#frame = getFrame(test, 89000)
+frame = getFrame(test, 12345)
+frame = getFrame(test, 89000)
+r = random.randint(1000, 89000)
+#r = 22635
+frame = getFrame(test, r)
+print(r)
 
 FindTable(frame, np.array([211, 200, 184]), True)
 
