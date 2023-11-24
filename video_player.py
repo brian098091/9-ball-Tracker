@@ -2,9 +2,11 @@ import datetime
 import tkinter as tk
 from tkinter import filedialog
 from tkVideoPlayer import TkinterVideo
+import numpy as np
 import cv2
+from findTable import FindTable
 
-video_name = "test.mp4"
+video_name = "resources/edited.mp4"
 
 def update_duration(event):
     """ updates the duration after finding the duration """
@@ -43,16 +45,21 @@ def finish():
     x = label.winfo_x()
     y = label.winfo_y()
     time = vid_player.current_duration()
-    print('coordinate = ',x,y)
+    print('coordinate = ',round(x/3),round(y/3))
     print('time = ',time)
     cap = cv2.VideoCapture(video_name)
-    cap.set(cv2.CAP_PROP_POS_FRAMES,time)
+    cap.set(cv2.CAP_PROP_POS_FRAMES,time*30)
     ret,frame = cap.read()
-    # cv2.imshow('My Image', frame)
-    print('color= ',frame[y,x])
-    # print('bot left = ',label2.winfo_x(),label2.winfo_y())
-    # print('top right = ',label3.winfo_x(),label3.winfo_y())
-    # print('bot right = ',label4.winfo_x(),label4.winfo_y())
+    
+    print('color= ',frame[round(y/3),round(x/3)])
+    four_points = FindTable(frame,frame[round(y/3),round(x/3)])
+    print(four_points)
+    if four_points != None:
+        four_points[2],four_points[3] = four_points[3],four_points[2]
+        points = np.array(four_points, np.int32)
+        image = cv2.polylines(frame,pts=[points],isClosed=True,color=(255,0,255))
+        cv2.imwrite('output.jpg', image)
+    
 def video_ended(event):
     """ handle video ended """
     progress_slider.set(progress_slider["to"])
@@ -73,35 +80,20 @@ def drag_motion(event):
 
 root = tk.Tk()
 root.title("Tkinter media")
+root.geometry("1920x1184")
+root.resizable(width=False,height=False)
+
 
 vid_player = TkinterVideo(scaled=True, master=root)
 
 vid_player.load(video_name)
 
-label = tk.Label(root,bg="red",width=2,height=1,text='tl')
-label.place(x=255,y=60)
+label = tk.Label(root,bg="red",width=2,height=1,text='color')
+label.place(x=255,y=255)
 
-
-# label2 = tk.Label(root,bg="red",width=2,height=1,text='bl')
-# label2.place(x=160,y=380)
-
-# label3 = tk.Label(root,bg="red",width=2,height=1,text='tr')
-# label3.place(x=590,y=60)
-
-# label4 = tk.Label(root,bg="red",width=2,height=1,text='br')
-# label4.place(x=690,y=380)
 
 label.bind("<Button-1>",drag_start)
 label.bind("<B1-Motion>",drag_motion)
-
-# label2.bind("<Button-1>",drag_start)
-# label2.bind("<B1-Motion>",drag_motion)
-
-# label3.bind("<Button-1>",drag_start)
-# label3.bind("<B1-Motion>",drag_motion)
-
-# label4.bind("<Button-1>",drag_start)
-# label4.bind("<B1-Motion>",drag_motion)
 
 
 vid_player.pack(expand=True, fill="both")
