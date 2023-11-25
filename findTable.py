@@ -52,15 +52,13 @@ def intersection(line1, line2):
 	x0, y0 = int(np.round(x0)), int(np.round(y0))
 	return [x0, y0]
 
-def segmented_intersections(lines):
-	"""Finds the intersections between groups of lines."""
+def findCorner(bounds):
+	"""Finds the intersections between top, bottom, left, right."""
 
 	intersections = []
-	for i, group in enumerate(lines[:-1]):
-		for next_group in lines[i+1:]:
-			for line1 in group:
-				for line2 in next_group:
-					intersections.append(intersection(line1, line2))
+	for i in range(2):
+		for j in range(2, 4):
+			intersections.append(intersection(bounds[i], bounds[j]))
 	return intersections
 
 def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -> list:
@@ -158,7 +156,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 
 	
 	# Perform Houph Line Transform
-	bounds = [[] for i in range(4)]
+	bounds = []
 	for bound_num in range(4):
 		done = False
 		min_thresh = 100
@@ -176,23 +174,23 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 									stn = 0)
 
 			#print(lines)
-			bounds[bound_num] = []
+			res = []
 			if lines is not None:
 				for line in lines:
 					if is_bound(bound_num, line):
-						bounds[bound_num].append(line)
-			if len(bounds[bound_num]) < 1:
+						res.append(line)
+			if len(res) < 1:
 				max_thresh = thresh - 1
-			elif len(bounds[bound_num]) > 1:
+			elif len(res) > 1:
 				min_thresh = thresh + 1
 			else:
+				bounds.append(res[0])
 				done = True
 
 	#print(bounds)
 	if log_images:
 		copy_frame = copy.copy(frame)
-		for lines in bounds:
-			line = lines[0]
+		for line in bounds:
 			rho = line[0][0]
 			theta = line[0][1]
 			a = math.cos(theta)
@@ -203,10 +201,10 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 			pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
 			cv2.line(copy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
 
-		cv2.imwrite(LOG_IMG_NAME('four'), copy_frame)
+		cv2.imwrite(LOG_IMG_NAME('filtered four line'), copy_frame)
 		LOG_FILE_CNT += 1
 
-"""
+	"""
 	segmented = segment_by_angle_kmeans(lines)
 
 	if log_images:
@@ -225,10 +223,10 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 
 		cv2.imwrite(LOG_IMG_NAME('segment_by_k-means'), copy_frame)
 		LOG_FILE_CNT += 1
-"""
-"""
-	intersections = segmented_intersections(segmented)
-	print(intersections)
+	"""
+
+	intersections = findCorner(bounds)
+	#print(intersections)
 
 	if log_images:
 		copy_frame = copy.copy(frame)
@@ -241,7 +239,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 	if len(intersections) != 4:
 		return None
 	return intersections
-"""
+
 
 	
 
