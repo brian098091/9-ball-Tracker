@@ -4,6 +4,8 @@ import math
 import copy
 import os
 import random
+from table import Table
+from log_image import Log
 from collections import defaultdict
 
 def segment_by_angle_kmeans(lines, k=2, **kwargs):
@@ -56,42 +58,36 @@ def findCorner(bounds):
 	"""Finds the intersections between top, bottom, left, right."""
 
 	intersections = []
-	for i in range(2):
-		for j in range(2, 4):
-			intersections.append(intersection(bounds[i], bounds[j]))
+	intersections.append(intersection(bounds[0], bounds[2]))
+	intersections.append(intersection(bounds[0], bounds[3]))
+	intersections.append(intersection(bounds[1], bounds[3]))
+	intersections.append(intersection(bounds[1], bounds[2]))
 	return intersections
 
-def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -> list:
-	"""
-	table_color: [B, G, R]
-	"""
+def FindTable ( frame: np.ndarray, table: Table, log_images=False ) -> list:
 
 	if log_images:
+		log = Log()
+		log.log_image(frame, 'origin_frame')
+		"""
 		LOG_FILE_CNT = 1
 		LOG_FILE_DIR = './log_images/'
 		LOG_IMG_NAME = lambda name: LOG_FILE_DIR + 'IMG_' + str(LOG_FILE_CNT) + '_' + name + '.jpg'
-
 		try:
 			for f in os.listdir(LOG_FILE_DIR):
 				os.remove(LOG_FILE_DIR + f)
 		except FileNotFoundError as err:
 			os.mkdir(LOG_FILE_DIR)
-		cv2.imwrite(LOG_IMG_NAME('origin_frame'), frame)
-		LOG_FILE_CNT += 1
+		"""
 
 	# Filter image by HLS color
 	frame_HLS = cv2.cvtColor(frame, cv2.COLOR_BGR2HLS)
-	table_color_HLS = cv2.cvtColor(np.uint8([[table_color]]), cv2.COLOR_BGR2HLS)[0][0]
 
-	HLS_range_size = [15, 70, 50]
-	HLS_range_low = table_color_HLS - HLS_range_size
-	HLS_range_high = table_color_HLS + HLS_range_size
-
-	filtered = cv2.inRange(frame_HLS, HLS_range_low, HLS_range_high)
+	if table.color_max is None or table.color_min is None: return None
+	filtered = cv2.inRange(frame_HLS, table.color_min, table.color_max)
 
 	if log_images:
-		cv2.imwrite(LOG_IMG_NAME('filtered_result'), filtered)
-		LOG_FILE_CNT += 1
+		log.log_image(filtered, 'filtered_result')
 
 	# Image closing
 	kernel = np.ones((3,3), np.uint8)
@@ -100,8 +96,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 	filtered = cv2.dilate(filtered, kernel, iterations = iters)
 
 	if log_images:
-		cv2.imwrite(LOG_IMG_NAME('after_closing'), filtered)
-		LOG_FILE_CNT += 1
+		log.log_image(filtered, 'after_closing')
 
 	# Find contour
 	contours, hierarchy = cv2.findContours(filtered, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -125,8 +120,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 		cv2.drawContours(copy_frame, contours, -1, (0, 255, 0), 1)
 		cv2.drawContours(copy_frame, filtered_contours, -1, (0, 0, 255), 2)
 
-		cv2.imwrite(LOG_IMG_NAME('contours'), copy_frame)
-		LOG_FILE_CNT += 1
+		log.log_image(copy_frame, 'contours')
 
 	# Draw contours in binary image
 
@@ -134,8 +128,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 	cv2.drawContours(bin_contour, filtered_contours, -1, 255, 2)
 
 	if log_images:
-		cv2.imwrite(LOG_IMG_NAME('binary_contours'), bin_contour)
-		LOG_FILE_CNT += 1
+		log.log_image(bin_contour, 'binary_contours')
 
 	def is_bound(bound_num, line):
 		"""
@@ -186,8 +179,6 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 			else:
 				bounds.append(res[0])
 				done = True
-
-	#print(bounds)
 	if log_images:
 		copy_frame = copy.copy(frame)
 		for line in bounds:
@@ -201,8 +192,7 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 			pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
 			cv2.line(copy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
 
-		cv2.imwrite(LOG_IMG_NAME('filtered four line'), copy_frame)
-		LOG_FILE_CNT += 1
+		log.log_image(copy_frame, 'filtered four line')
 
 	"""
 	segmented = segment_by_angle_kmeans(lines)
@@ -233,15 +223,13 @@ def FindTable ( frame: np.ndarray, table_color: np.ndarray, log_images=False ) -
 		for intersec in intersections:
 			cv2.circle(copy_frame, intersec, 3, (0, 0, 255), thickness=-1)
 
-		cv2.imwrite(LOG_IMG_NAME('intersections'), copy_frame)
-		LOG_FILE_CNT += 1
+		log.log_image(copy_frame, 'intersections')
 
 	if len(intersections) != 4:
 		return None
+	table.corners = intersections
 	return intersections
 
-
-	
 
 
 test = cv2.VideoCapture('./resources/edited.mp4')
@@ -255,11 +243,17 @@ frame = getFrame(test, 1000)
 frame = getFrame(test, 12345)
 frame = getFrame(test, 89000)
 r = random.randint(1000, 89000)
-#r = 22635
+r = 46534
 frame = getFrame(test, r)
 print(r)
 
-FindTable(frame, np.array([211, 200, 184]), True)
+table_color = np.array([211, 200, 184])
+table_color_HLS = cv2.cvtColor(np.uint8([[table_color]]), cv2.COLOR_BGR2HLS)[0][0]
+t = Table()
+t.set_hls_color(table_color_HLS)
+if FindTable(frame, t, True) != None:
+	from findBalls import FindBalls
+	FindBalls(frame, t, True)
 
 """
 cv2.waitKey(0)

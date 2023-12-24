@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkVideoPlayer import TkinterVideo
 import numpy as np
 import cv2
+from table import Table
 from findTable import FindTable
 
 video_name = "resources/edited.mp4"
@@ -52,7 +53,9 @@ def finish():
     ret,frame = cap.read()
     
     print('color= ',frame[round(y/3),round(x/3)])
-    four_points = FindTable(frame,frame[round(y/3),round(x/3)])
+    color_hls = cv2.BGR2HLS(frame[round(y/3), round(x/3)])
+    table = Table(color_hls)
+    four_points = FindTable(frame, table)
     print(four_points)
     if four_points != None:
         four_points[2],four_points[3] = four_points[3],four_points[2]
