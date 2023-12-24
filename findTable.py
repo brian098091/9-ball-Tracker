@@ -249,8 +249,8 @@ print(r)
 
 table_color = np.array([211, 200, 184])
 table_color_HLS = cv2.cvtColor(np.uint8([[table_color]]), cv2.COLOR_BGR2HLS)[0][0]
-t = Table()
-t.set_hls_color(table_color_HLS)
+t = Table(table_color_HLS)
+# t.set_hls_color(table_color_HLS)
 if FindTable(frame, t, True) != None:
 	from findBalls import FindBalls
 	FindBalls(frame, t, True)

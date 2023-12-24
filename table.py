@@ -2,12 +2,12 @@ import numpy as np
 
 class Table():
 
-    def __init__(self, color=None):
+    def __init__(self, color=[]):
         self.color_min = None
         self.color_max = None
         self.corners = None
         self.balls = None
-        if color != None: self.set_hls_color(color)
+        if len(color): self.set_hls_color(color)
 
     def set_hls_color( self, hls_color: np.ndarray, hls_color_range=np.asarray([15, 70, 50]) ):
         if len(hls_color) != 3 or len(hls_color_range) != 3:
