@@ -165,6 +165,23 @@ def FindTable ( frame: np.ndarray, table: Table, log_images=False ) -> list:
 									threshold = thresh,
 									srn = 0,
 									stn = 0)
+			
+			if log_images:
+				print(thresh)
+				print(len(lines))
+				ccopy_frame = copy.copy(frame)
+				for line in lines:
+					rho = line[0][0]
+					theta = line[0][1]
+					a = math.cos(theta)
+					b = math.sin(theta)
+					x0 = a * rho
+					y0 = b * rho
+					pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
+					pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+					cv2.line(ccopy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
+
+				log.log_image(ccopy_frame, 'changing threshold')
 
 			#print(lines)
 			res = []
@@ -243,7 +260,7 @@ frame = getFrame(test, 1000)
 frame = getFrame(test, 12345)
 frame = getFrame(test, 89000)
 r = random.randint(1000, 89000)
-r = 46534
+r = 78062
 frame = getFrame(test, r)
 print(r)
 
