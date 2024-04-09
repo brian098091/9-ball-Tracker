@@ -143,6 +143,7 @@ class Game():
             cv2.imwrite(f'./tmpOutput/view_{i}.jpg', v[1].astype('uint8'))
             view_objs.append(View(i, v[1]))
 
+        return
         for i, r in enumerate(rates):
             for j, v in enumerate(views):
                 if abs(r - v[0]) <= max_diff:
@@ -151,51 +152,51 @@ class Game():
                     
         
         
+if __name__ == '__main__':
+    j = cv2.imread('resources/2022_APP_2_000.jpg')
+    j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
+    vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
+    g = Game(vidcap, 4)
+    g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
+    print('Please wait, 3Q')
+    # Test by video
 
-j = cv2.imread('resources/2022_APP_2_000.jpg')
-j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
-vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-g = Game(vidcap, 4)
-g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
-print('done')
-# Test by video
-
-vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-ret, frame = vidcap.read()
-width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('./tmpOutput/ffoutput.mp4', fourcc, 20, (width, height))
-while ret:
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    bin_mask = cv2.inRange(frame, *g.tcrange)
-    img = cv2.cvtColor(bin_mask, cv2.COLOR_GRAY2BGR)
-    out.write(img)
+    vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
     ret, frame = vidcap.read()
-out.release()
+    width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-# Test background substraction by video
-vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-ret, frame = vidcap.read()
-width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('./tmpOutput/ffoutput.mp4', fourcc, 20, (width, height))
+    while ret:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        bin_mask = cv2.inRange(frame, *g.tcrange)
+        img = cv2.cvtColor(bin_mask, cv2.COLOR_GRAY2BGR)
+        out.write(img)
+        ret, frame = vidcap.read()
+    out.release()
 
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('./tmpOutput/background_subtraction.mp4', fourcc, 20, (width, height))
-while ret:
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    bin_mask = cv2.inRange(frame, *g.tcrange)
-    res = cv2.bitwise_and(frame, frame, mask=cv2.bitwise_not(bin_mask))
-    # res[np.where(res == [0, 0, 0])] = [230, 100, 100]
-
-    res = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
-
-    m = np.all(res[:, :, :3] == [0,0,0], axis=-1)
-    res[m, :3] = [117, 117, 117]
-
-    out.write(res)
+    # Test background substraction by video
+    vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
     ret, frame = vidcap.read()
-out.release()
+    width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-g.sep_views()
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter('./tmpOutput/background_subtraction.mp4', fourcc, 20, (width, height))
+    while ret:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        bin_mask = cv2.inRange(frame, *g.tcrange)
+        res = cv2.bitwise_and(frame, frame, mask=cv2.bitwise_not(bin_mask))
+        # res[np.where(res == [0, 0, 0])] = [230, 100, 100]
+
+        res = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
+
+        m = np.all(res[:, :, :3] == [0,0,0], axis=-1)
+        res[m, :3] = [117, 117, 117]
+
+        out.write(res)
+        ret, frame = vidcap.read()
+    out.release()
+
+    g.sep_views()
