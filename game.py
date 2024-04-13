@@ -63,6 +63,7 @@ class Game():
         tcrange[1] += np.minimum(255-tcrange[1], 5 * gap)
         self.tcrange = tcrange
         print('Set tcrange to:', *tcrange, file=sys.stderr)
+        return cv2.inRange(img, *tcrange)
 
     def sep_views(self, diff_percentage=3):
         assert 1 <= self.sample_rate
@@ -157,7 +158,7 @@ if __name__ == '__main__':
     j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
     g = Game(vidcap, 4)
-    g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
+    ret=g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
     print('Please wait, 3Q')
     # Test by video
 
