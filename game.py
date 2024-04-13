@@ -28,8 +28,8 @@ class Game():
         # loc: [y, x] start position
         assert len(loc) == 2 and len(img.shape) == 3
         h, w = img.shape[:2]
-        assert loc[0] >= 0 and loc[0] < w
-        assert loc[1] >= 0 and loc[1] < h
+        assert loc[0] >= 0 and loc[0] < h
+        assert loc[1] >= 0 and loc[1] < w
         visited = np.zeros(img.shape[:2])
         tcrange = np.array([img[loc],] * 2)
         assert tcrange.shape == (2,3)
