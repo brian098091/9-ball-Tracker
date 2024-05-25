@@ -3,7 +3,9 @@ import cv2
 import sys
 import random
 from view import View
+from frame import Frame
 from queue import Queue
+from findBalls import *
 
 class Game():
     def __init__(self, cap, sample_rate=1):
@@ -16,7 +18,6 @@ class Game():
         self.tcrange = [] # table color range
         self.frame_count = (self.vidlen - 1) // sample_rate + 1
         self.frames = np.empty(self.frame_count, dtype=object)
-
 
     def set_tcrange_ff(self, 
         img: np.ndarray, 
@@ -88,10 +89,12 @@ class Game():
         idx = 0
         ret, frame = cap.read()
         rates = np.empty(self.frame_count, dtype='int32')
+        frames_no = np.empty(self.frame_count, dtype='int32')
         while ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             bmask = cv2.inRange(frame, *self.tcrange)
             rate = calc_rate(bmask)
+            frames_no[idx] = cap.get(cv2.CAP_PROP_POS_FRAMES)
             rates[idx] = rate
 
             # Update views
@@ -131,8 +134,8 @@ class Game():
                 ret, frame = cap.read()
 
             idx += 1
-            if idx % 100==0: 
-                print(idx, len(views), rate)
+            #if idx % 100==0: 
+            #    print(idx, len(views), rate)
 
         def filter_view( v ):
             return  v[2] > (2/100) * samples and \
@@ -141,27 +144,38 @@ class Game():
         view_objs = []
         print('Result views:\n', views, file=sys.stderr)
         for i, v in enumerate(views):
-            cv2.imwrite(f'./tmpOutput/view_{i}.jpg', v[1].astype('uint8'))
-            view_objs.append(View(i, v[1]))
-
-        return
+            v[1] = v[1].astype('uint8')
+            cv2.imwrite(f'./tmpOutput/view_{i}.jpg', v[1])
+            view_objs.append(View(i, self.tcrange, v[1])) # TODO: different tcrange for each view
+        
+        #Note: Only sampled frames are inside self.frames
         for i, r in enumerate(rates):
             for j, v in enumerate(views):
                 if abs(r - v[0]) <= max_diff:
-                    self.frames[i] = Frame(i, view_obj[j])
+                    self.frames[i] = Frame(frames_no[i], view_objs[j])
                     break
-                    
-        
-        
+    
+    def proc_frames(self):
+        for fobj in self.frames:
+            if fobj == None: continue # Not interesting
+            vidcap.set(cv2.CAP_PROP_POS_FRAMES, fobj.frame_no)
+            ret, frame = vidcap.read()
+            frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            assert ret
+            fobj.findBalls(frame_HSV, True)
+
+
 if __name__ == '__main__':
     j = cv2.imread('resources/2022_APP_2_000.jpg')
     j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-    g = Game(vidcap, 4)
+    g = Game(vidcap, 50) # 4
     ret=g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
     print('Please wait, 3Q')
-    # Test by video
 
+    # Test by video
+    """
+    print('Test tcrange by video...')
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
     ret, frame = vidcap.read()
     width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -176,8 +190,10 @@ if __name__ == '__main__':
         out.write(img)
         ret, frame = vidcap.read()
     out.release()
+    """
 
     # Test background substraction by video
+    """
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
     ret, frame = vidcap.read()
     width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -190,8 +206,14 @@ if __name__ == '__main__':
         bin_mask = cv2.inRange(frame, *g.tcrange)
         res = cv2.bitwise_and(frame, frame, mask=cv2.bitwise_not(bin_mask))
         # res[np.where(res == [0, 0, 0])] = [230, 100, 100]
+        ctrs = FindBalls(frame, g.tcrange)
+        res = draw_rectangles(ctrs, res)
 
         res = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
+        contours_poly = [None]*len(ctrs)
+        #for i in range(len(ctrs)):
+            #contours_poly[i] = cv2.approxPolyDP(ctrs[i], 3, True)
+            #cv2.drawContours(res, contours_poly, i, (0, 0, 255))
 
         m = np.all(res[:, :, :3] == [0,0,0], axis=-1)
         res[m, :3] = [117, 117, 117]
@@ -199,5 +221,7 @@ if __name__ == '__main__':
         out.write(res)
         ret, frame = vidcap.read()
     out.release()
-
+    """
     g.sep_views()
+    g.proc_frames()
+    
