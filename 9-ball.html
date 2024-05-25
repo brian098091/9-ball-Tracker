@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>9-ball</title>
+<style>
+  .flex-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .video-container {
+    display: none;
+    align-items: center;
+    justify-content: start;
+    margin-bottom: 20px;
+  }
+
+  .content-container {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+  }
+
+  #colorInfo {
+    display: none;
+    margin-left: 20px; /* 與canvas的間距 */
+    margin-top: 20px; /* 與canvas的上邊距，將整體向下移動 */
+  }
+  
+  #rgbValue {
+    display: block; /* 使RGB值顯示在不同的行 */
+    margin-bottom: 10px; /* RGB值與顏色框之間的距離 */
+  }
+  
+  #selectedColor {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #000;
+    margin-bottom: 10px; /* 顏色框與按鈕之間的距離 */
+  }
+  
+  #confirmColorBtn {
+    display: block; /* 使按鈕獨立成行 */
+    margin-top: 10px; /* 按鈕與其他元素之間的距離 */
+  }
+  #coordinates {
+    display: block; /* 確保座標顯示在新行 */
+    margin-bottom: 5px; /* 和RGB值之間的距離 */
+  }
+</style>
+</head>
+<body>
+<input type="file" id="videoUploader" accept="video/*">
+<div class="flex-container">
+  <div class="video-container">
+    <video id="videoPlayer" controls width="640"></video>
+    <button id="getFrameBtn">決定frame</button>
+  </div>
+  <div class="content-container">
+    <canvas id="frameCanvas"></canvas>
+    <div id="colorInfo">
+      <p>目前選擇的點座標: <span id="coordinates">X: 0, Y: 0</span></p>
+      <p>目前選擇的桌子顏色:
+      <span id="rValue">R: 0</span>
+      <span id="gValue">G: 0</span>
+      <span id="bValue">B: 0</span>
+      </p>
+      <div id="selectedColor"></div>
+      
+      <div id="HSVControls">
+        <label for="gap1">H (0-50):</label>
+        <input type="range" id="gap1" name="gap1" min="0" max="50" value="10" oninput="this.nextElementSibling.value = this.value">
+        <output>10</output><br>
+      
+        <label for="gap2">S (0-50):</label>
+        <input type="range" id="gap2" name="gap2" min="0" max="50" value="15" oninput="this.nextElementSibling.value = this.value">
+        <output>15</output><br>
+      
+        <label for="gap3">V (0-50):</label>
+        <input type="range" id="gap3" name="gap3" min="0" max="50" value="15" oninput="this.nextElementSibling.value = this.value">
+        <output>15</output><br>
+        <button id="confirmColorBtn">確定桌子顏色</button>
+      </div>
+    </div>
+  </div>
+  <div id="maskContainer" style="display: none;">
+  <img id="maskImage" src="" alt="Mask Image" style="max-width: 100%; height: auto;">
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
+
