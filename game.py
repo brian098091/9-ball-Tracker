@@ -150,19 +150,21 @@ class Game():
         
         #Note: Only sampled frames are inside self.frames
         for i, r in enumerate(rates):
+            vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames_no[i])
+            ret, frame = vidcap.read()
+            assert ret
+            frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             for j, v in enumerate(views):
                 if abs(r - v[0]) <= max_diff:
-                    self.frames[i] = Frame(frames_no[i], view_objs[j])
+                    self.frames[i] = Frame(frames_no[i], view_objs[j], frame_HSV)
                     break
+                if j == len(views)-1: 
+                    self.frames[i] = Frame(frames_no[i], None, frame_HSV)
     
     def proc_frames(self):
         for fobj in self.frames:
-            if fobj == None: continue # Not interesting
-            vidcap.set(cv2.CAP_PROP_POS_FRAMES, fobj.frame_no)
-            ret, frame = vidcap.read()
-            frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            assert ret
-            fobj.findBalls(frame_HSV, True)
+            if fobj.view == None: continue # Not interesting
+            fobj.findBalls(True)
 
 
 if __name__ == '__main__':

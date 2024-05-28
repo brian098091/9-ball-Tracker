@@ -4,11 +4,17 @@ import copy
 from log_image import Log
 
 class Frame:
-    def __init__(self, no, view):
+    def __init__(self, no, view, frame_HSV):
         self.frame_no = no
         self.view = view
+        self.frame = frame_HSV # HSVVVVVVV
+
+        mask = np.zeros(self.frame.shape, dtype=np.uint8)
+        if self.view != None:
+            mask = cv2.fillPoly(mask, np.int32([self.view.corners]), [255, 255, 255])
+        self.foreground = cv2.bitwise_and(self.frame, mask)
     
-    def findBalls(self, frame: np.ndarray, log_images=False):
+    def findBalls(self, log_images=False):
         def filter_ctrs(ctrs, H, W): # Circle detection
             filtered = []
             for ctr in ctrs:
@@ -38,6 +44,8 @@ class Frame:
                 cv2.drawContours(output,[box],0,(0,0,255),3) # draws box
                 
             return output
+
+        frame = self.foreground
 
         if log_images:
             copy_frame = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)

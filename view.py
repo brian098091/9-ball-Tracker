@@ -14,6 +14,7 @@ class View:
         self.tcrange = tcrange.astype('uint8')
         self.corners = self.find_baize(self.avg_mask, True)
         assert self.corners != None
+        self.corners = np.array(self.corners, dtype=np.int32)
     
     def find_baize(self, mask: np.ndarray, log_images=False):
         
