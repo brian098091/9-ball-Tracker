@@ -75,11 +75,11 @@ class Frame:
 
         ctrs, hierarchy = cv2.findContours(bMask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         
-        print("osize:", len(ctrs))
+        #print("osize:", len(ctrs))
         ctrs = filter_ctrs(ctrs, *frame.shape[:2])
         #detected_objects_filtered = draw_rectangles(ctrs_filtered, frame)
         if log_images:
-            print("size:", len(ctrs))
+            #print("size:", len(ctrs))
             detected_objects = draw_rectangles(ctrs, frame)
             detected_objects = cv2.cvtColor(detected_objects, cv2.COLOR_HSV2BGR)
             log.log_image(detected_objects, 'contours')

@@ -59,7 +59,6 @@ def FindBalls( frame: np.ndarray, tcrange: np.ndarray, log_images=False ):
     ctrs = filter_ctrs(ctrs, *frame.shape[:2])
     #detected_objects_filtered = draw_rectangles(ctrs_filtered, frame)
     if log_images:
-        print("size:", len(ctrs))
         detected_objects = draw_rectangles(ctrs, frame) 
         log.log_image(detected_objects, 'contours')
         #log.log_image(detected_objects_filtered, 'filtered contours')

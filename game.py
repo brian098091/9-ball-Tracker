@@ -66,7 +66,10 @@ class Game():
         print('Set tcrange to:', *tcrange, file=sys.stderr)
         return cv2.inRange(img, *tcrange)
 
-    def sep_views(self, diff_percentage=3):
+    def sep_views(self, diff_percentage=3, log_images=False):
+        if log_images:
+            log = Log()
+
         assert 1 <= self.sample_rate
         samples = self.frame_count
 
@@ -130,6 +133,17 @@ class Game():
                 views.pop(cidx)
                 cidx -= 1
 
+            """
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            bmask = cv2.inRange(frame, *self.tcrange)
+            bmask = bmask.astype('float64')
+            maxdiff *= 256
+            for v in views:
+                diff = np.sum(abs(bmask-v[1]))
+                if diff <= maxdiff:
+                    break
+            """
+
             for i in range(self.sample_rate):
                 ret, frame = cap.read()
 
@@ -144,26 +158,34 @@ class Game():
         view_objs = []
         print('Result views:\n', views, file=sys.stderr)
         for i, v in enumerate(views):
-            v[1] = v[1].astype('uint8')
-            cv2.imwrite(f'./tmpOutput/view_{i}.jpg', v[1])
-            view_objs.append(View(i, self.tcrange, v[1])) # TODO: different tcrange for each view
+            avg = v[1].astype('uint8')
+            v[1] = avg
+            if log_images:
+                log.log_image(avg, f'view{i+1}')
+            #cv2.imwrite(f'./tmpOutput/view_{i}.jpg', avg)
+            view_objs.append(View(i, self.tcrange, avg)) # TODO: different tcrange for each view
         
         #Note: Only sampled frames are inside self.frames
+        print(self.width*self.height)
         for i, r in enumerate(rates):
             vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames_no[i])
             ret, frame = vidcap.read()
             assert ret
             frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            bmask = cv2.inRange(frame_HSV, *self.tcrange)
             for j, v in enumerate(views):
-                if abs(r - v[0]) <= max_diff:
+                if np.sum(abs(bmask.astype(np.int32) - v[1].astype(np.int32))) <= 255*max_diff:
+                    log.log_image(bmask, f'view_{j+1}-frame_{frames_no[i]}')
                     self.frames[i] = Frame(frames_no[i], view_objs[j], frame_HSV)
+                    # print(j)
                     break
                 if j == len(views)-1: 
                     self.frames[i] = Frame(frames_no[i], None, frame_HSV)
     
     def proc_frames(self):
         for fobj in self.frames:
-            if fobj.view == None: continue # Not interesting
+            if fobj.view == None:
+                continue # Not interesting
             fobj.findBalls(True)
 
 
@@ -171,7 +193,7 @@ if __name__ == '__main__':
     j = cv2.imread('resources/2022_APP_2_000.jpg')
     j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-    g = Game(vidcap, 50) # 4
+    g = Game(vidcap, 10) # 4
     ret=g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
     print('Please wait, 3Q')
 
@@ -224,6 +246,6 @@ if __name__ == '__main__':
         ret, frame = vidcap.read()
     out.release()
     """
-    g.sep_views()
+    g.sep_views(log_images=True)
     g.proc_frames()
     

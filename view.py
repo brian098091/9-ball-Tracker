@@ -113,10 +113,11 @@ class View:
             done = False
             min_thresh = 100
             max_thresh = 500
+            last_res = None
             while not done:
                 if min_thresh > max_thresh:
                     # No boundary found
-                    return None
+                    break
                 thresh = min_thresh + (max_thresh - min_thresh) // 2
                 lines = cv2.HoughLines(image = bin_contour,
                                         rho = 1,
@@ -126,8 +127,6 @@ class View:
                                         stn = 0)
                 
                 if log_images:
-                    print(thresh)
-                    print(len(lines))
                     ccopy_frame = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
                     for line in lines:
                         rho = line[0][0]
@@ -148,6 +147,9 @@ class View:
                     for line in lines:
                         if is_bound(bound_num, line):
                             res.append(line)
+                print(thresh, len(res))
+                if len(res) > 0:
+                    last_res = res
                 if len(res) < 1:
                     max_thresh = thresh - 1
                 elif len(res) > 1:
@@ -155,6 +157,10 @@ class View:
                 else:
                     bounds.append(res[0])
                     done = True
+            if not done:
+                bounds.append(last_res[0])
+
+            if not done:print('Not Done!')
         if log_images:
             copy_frame = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
             for line in bounds:
