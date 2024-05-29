@@ -10,7 +10,7 @@ class Log():
             os.mkdir(log_file_path)
         if folder == None:
             folder = sys._getframe(1).f_code.co_name
-        if folder not in Log.fcnt.keys():
+        if folder not in Log.fcnt:
             Log.fcnt[folder] = 0
         self.folder = folder
         self.path = log_file_path + folder
