@@ -5,7 +5,8 @@ import random
 from view import View
 from frame import Frame
 from queue import Queue
-from findBalls import *
+from log_image import Log
+# from findBalls import *
 
 class Game():
     def __init__(self, cap, sample_rate=1):
@@ -186,14 +187,25 @@ class Game():
         for fobj in self.frames:
             if fobj.view == None:
                 continue # Not interesting
-            fobj.findBalls(True)
+            #fobj.findBalls(True)
+            hsv_list = [
+                [3, [120, 150, 100], [180, 255, 240]],
+                [1, [25, 150, 160], [35, 255, 255]],
+                [8, [0, 0, 0], [255, 255, 50]],
+                [0, [0, 0, 0], [255, 30, 255]],
+                [7, [100, 100, 128], [150, 200, 255]]
+            ]
+            for tt in hsv_list:
+                tt[1] = np.array(tt[1], dtype=np.uint8)
+                tt[2] = np.array(tt[2], dtype=np.uint8)
+            fobj.findBalls_cc(hsv_list, True)
 
 
 if __name__ == '__main__':
     j = cv2.imread('resources/2022_APP_2_000.jpg')
     j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-    g = Game(vidcap, 10) # 4
+    g = Game(vidcap, 100) # 4
     ret=g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
     print('Please wait, 3Q')
 

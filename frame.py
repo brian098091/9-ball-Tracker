@@ -85,3 +85,38 @@ class Frame:
             log.log_image(detected_objects, 'contours')
             #log.log_image(detected_objects_filtered, 'filtered contours')
         return ctrs
+    
+    def findBalls_cc(self, hsv_list, log_images=False):
+        # hsv_list: each element [i, mn, mx] means
+        # the hsv values of ball i is in [mn, mx]
+        frame = self.foreground
+        if log_images:
+            log = Log()
+            log.log_image(cv2.cvtColor(frame, cv2.COLOR_HSV2BGR), 'org')
+
+        pivots = np.empty((len(hsv_list), 2))
+        for i, (num, mn_hsv, mx_hsv) in enumerate(hsv_list):
+            bin = cv2.inRange(frame, mn_hsv, mx_hsv)
+            log.log_image(cv2.cvtColor(bin, cv2.COLOR_GRAY2BGR), f'Ball {num}')
+            pivots[i][1] = np.ma.array(np.indices(bin.shape)[0], mask=(bin==0)).mean()
+            pivots[i][0] = np.ma.array(np.indices(bin.shape)[1], mask=(bin==0)).mean()
+            if log_images:
+                col = tuple(map(int, mx_hsv//2+mn_hsv//2))
+                ff = copy.copy(frame)
+                # cv2.circle(frame, tuple(pivots[i].astype(np.int32)), 10, col, 3)
+        if log_images:
+            frame = cv2.cvtColor(frame, cv2.COLOR_HSV2BGR)
+            log.log_image(frame, 'f')
+        
+        # [20, 230, 250]
+        # [173, 255, 180]
+        bc = np.array([160, 255, 180], dtype=np.uint8)
+        diff = abs(frame.astype(np.int32) - bc.astype(np.int32))
+        # diff[0] *= 3
+        gray = 255 - np.sum(diff, axis=2) // 3
+        print(np.max(gray))
+        gray = gray.astype(np.uint8)
+        log.log_image(cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR), 'test')
+
+        exit(-1)
+            

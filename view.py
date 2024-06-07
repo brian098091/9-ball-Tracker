@@ -135,8 +135,8 @@ class View:
                         b = math.sin(theta)
                         x0 = a * rho
                         y0 = b * rho
-                        pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-                        pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+                        pt1 = (int(x0 + 3000*(-b)), int(y0 + 3000*(a)))
+                        pt2 = (int(x0 - 3000*(-b)), int(y0 - 3000*(a)))
                         cv2.line(ccopy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
 
                     log.log_image(ccopy_frame, 'changing threshold')
@@ -170,8 +170,8 @@ class View:
                 b = math.sin(theta)
                 x0 = a * rho
                 y0 = b * rho
-                pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-                pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+                pt1 = (int(x0 + 3000*(-b)), int(y0 + 3000*(a)))
+                pt2 = (int(x0 - 3000*(-b)), int(y0 - 3000*(a)))
                 cv2.line(copy_frame, pt1, pt2, (0, 0, 255), 2, cv2.LINE_AA)
 
             log.log_image(copy_frame, 'filtered four line')
