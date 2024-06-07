@@ -44,6 +44,10 @@ class Frame:
                 cv2.drawContours(output,[box],0,(0,0,255),3) # draws box
                 
             return output
+        
+       
+
+
 
         frame = self.foreground
 
@@ -84,4 +88,6 @@ class Frame:
             detected_objects = cv2.cvtColor(detected_objects, cv2.COLOR_HSV2BGR)
             log.log_image(detected_objects, 'contours')
             #log.log_image(detected_objects_filtered, 'filtered contours')
+            log.save_contour_regions(ctrs, cv2.cvtColor(frame, cv2.COLOR_HSV2BGR))
+        
         return ctrs
