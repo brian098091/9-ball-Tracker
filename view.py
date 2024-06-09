@@ -87,6 +87,8 @@ class View:
         bin_contour = np.zeros(filtered.shape[:2], np.uint8)
         cv2.drawContours(bin_contour, filtered_contours, -1, 255, 2)
 
+        bin_contour = cv2.Canny(mask, 100, 200)
+
         if log_images:
             log.log_image(bin_contour, 'binary_contours')
 
@@ -111,7 +113,7 @@ class View:
         bounds = []
         for bound_num in range(4):
             done = False
-            min_thresh = 100
+            min_thresh = 50
             max_thresh = 500
             last_res = None
             while not done:
