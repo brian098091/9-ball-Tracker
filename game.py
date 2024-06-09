@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import sys
 import random
+import os
 from view import View
 from frame import Frame
 from queue import Queue
@@ -183,11 +184,13 @@ class Game():
                 if j == len(views)-1: 
                     self.frames[i] = Frame(frames_no[i], None, frame_HSV)
     
-    def proc_frames(self):
+    def proc_frames(self, ball_dists):
         for fobj in self.frames:
             if fobj.view == None:
                 continue # Not interesting
-            #fobj.findBalls(True)
+            fobj.findBalls(ball_dists, True)
+            
+            continue
             hsv_list = [
                 [3, [120, 150, 100], [180, 255, 240]],
                 [1, [25, 150, 160], [35, 255, 255]],
@@ -259,5 +262,21 @@ if __name__ == '__main__':
     out.release()
     """
     g.sep_views(log_images=True)
-    g.proc_frames()
+
+    dir = './balls'
+    ball_dists = []
+    for num in range(10):
+        img = cv2.imread(f'{dir}/{num}.jpg')
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        size = (img.shape[0], img.shape[1])
+        mask = np.full(size, 0, dtype=np.uint8)
+        cv2.circle(mask, (size[0]//2, size[1]//2), min(*size)//2, 1, -1)
+        fill_size = np.sum(mask)
+        h = cv2.calcHist([img],[0],mask,[180],[0, 180]) / fill_size
+        s = cv2.calcHist([img],[1],mask,[256],[0, 256]) / fill_size
+        v = cv2.calcHist([img],[2],mask,[256],[0, 256]) / fill_size
+        ball_dists.append([h,s,v])
+    # ball_dists.shape == (10, 3, 180/256)
+
+    g.proc_frames(ball_dists)
     

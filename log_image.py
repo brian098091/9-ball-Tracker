@@ -2,6 +2,7 @@ import sys
 import cv2
 import os
 import numpy as np
+import shutil
 
 class Log():
     fcnt = {}
@@ -19,16 +20,21 @@ class Log():
         try:
             for f in os.listdir(self.path):
                 if Log.fcnt[folder] == 0:
-                    os.remove(self.path + '/' + f)
+                    shutil.rmtree(self.path + '/' + f)
         except FileNotFoundError as err:
             os.mkdir(self.path)
         Log.fcnt[folder] += 1
     
-    def log_image(self, img, name):
-        fullname = f'{self.path}/c{str(Log.fcnt[self.folder])}_img{str(self.cnter)}_{name}.jpg'
+    def log_image(self, img, name, hsv=0):
+        subfolder = f'c{str(Log.fcnt[self.folder])}'
+        if not os.path.exists(f'{self.path}/{subfolder}'):
+            os.mkdir(f'{self.path}/{subfolder}')
+        fullname = f'{self.path}/{subfolder}/img{str(self.cnter)}_{name}.jpg'
         # print(fullname)
         if len(img.shape) == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        elif hsv:
+            img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
         cv2.imwrite(fullname, img)
         self.cnter += 1
     
