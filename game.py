@@ -171,10 +171,8 @@ class Game():
         #Note: Only sampled frames are inside self.frames
         print(self.width*self.height)
         for i, r in enumerate(rates):
-            vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames_no[i])
-            ret, frame = vidcap.read()
-            if not ret:
-                print(frames_no[i], vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames_no[i])
+            ret, frame = self.vidcap.read()
             assert ret
             frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             bmask = cv2.inRange(frame_HSV, *self.tcrange)
