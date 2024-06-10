@@ -57,10 +57,11 @@ def process_frame():
         ret, j = vidcap.read()
         j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
 
-        g = Game(vidcap, 30)
+        g = Game(vidcap, 2)
         ret = g.set_tcrange_ff(j, (Y, X), gap=np.array([H,S,V], dtype='uint8'))
         # print('Please wait, 3Q')
-        _, buffer = cv2.imencode('.png', ret)
+        print(ret.shape)
+        _, buffer = cv2.imencode('.jpg', ret)
         mask_base64 = base64.b64encode(buffer).decode('utf-8')
         return jsonify({'mask_image': 'data:image/png;base64,' + mask_base64})
     except subprocess.CalledProcessError as e:
@@ -94,7 +95,7 @@ def find_ball_baize():
         ball_dists.append([h,s,v])
     # ball_dists.shape == (10, 3, 180/256)
 
-    g.proc_frames(ball_dists)
+    g.proc_frames(ball_dists, True)
     return jsonify({"status": "success", "message": "Mask processing confirmed"})
 
 if __name__ == '__main__':

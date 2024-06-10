@@ -26,6 +26,7 @@ class Game():
         loc: tuple, 
         gap: np.ndarray = np.array([1,1,1], dtype='uint8')
         ):
+        print('HI IM ding fan')
         # Find the table color range with Flood Filled algorithm
         # img: source image
         # loc: [y, x] start position
