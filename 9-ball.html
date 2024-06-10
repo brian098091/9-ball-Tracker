@@ -5,7 +5,6 @@
 <title>9-ball</title>
 <style>
   .flex-container {
-    display: flex;
     flex-direction: column;
     align-items: center;
   }
@@ -25,35 +24,100 @@
 
   #colorInfo {
     display: none;
-    margin-left: 20px; /* 與canvas的間距 */
-    margin-top: 20px; /* 與canvas的上邊距，將整體向下移動 */
+    margin-left: 20px;
+    margin-top: 20px;
   }
   
   #rgbValue {
-    display: block; /* 使RGB值顯示在不同的行 */
-    margin-bottom: 10px; /* RGB值與顏色框之間的距離 */
+    display: block;
+    margin-bottom: 10px;
   }
   
   #selectedColor {
     width: 50px;
     height: 50px;
     border: 1px solid #000;
-    margin-bottom: 10px; /* 顏色框與按鈕之間的距離 */
+    margin-bottom: 10px;
   }
   
   #confirmColorBtn {
-    display: block; /* 使按鈕獨立成行 */
-    margin-top: 10px; /* 按鈕與其他元素之間的距離 */
+    display: block;
+    margin-top: 10px;
+    width: 150px;
+    height: 45px;
+    font-size: 20px;
   }
+  
+  #getFrameBtn {
+    margin-left: 20px;
+    width: 150px;
+    height: 45px;
+    font-size: 20px;
+  }
+
   #coordinates {
-    display: block; /* 確保座標顯示在新行 */
-    margin-bottom: 5px; /* 和RGB值之間的距離 */
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  #confirmMaskBtn {
+    margin-top: 20px;
+    margin-left: 20px;
+    width: 150px;
+    height: 45px;
+    font-size: 20px;
+  }
+
+  .image-selection-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .image-option {
+    display: flex;
+    align-items: center;
+    margin-left: 50px;
+  }
+
+  .image-option img {
+    width: 300px;
+    height: 50px;
+    border: 2px solid transparent;
+  }
+
+  .image-option input[type="radio"] {
+    margin-right: 10px;
+  }
+
+  .mask-container {
+    display: flex;
+    position: relative;
+  }
+
+  .mask-image {
+    max-width: 70%;
   }
 </style>
 </head>
 <body>
-<input type="file" id="videoUploader" accept="video/*">
 <div class="flex-container">
+  <div>
+    <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL">
+    <div>
+      <label for="startTime">Start Time (seconds):</label>
+      <input type="number" id="startTime" min="0" placeholder="Optional">
+    </div>
+    <div>
+      <label for="endTime">End Time (seconds):</label>
+      <input type="number" id="endTime" min="0" placeholder="Optional">
+    </div>
+    <button id="downloadBtn">Download Video</button>
+  </div>
+  <div>
+    <input type="file" id="videoUploader" accept="video/*">
+  </div>
   <div class="video-container">
     <video id="videoPlayer" controls width="640"></video>
     <button id="getFrameBtn">決定frame</button>
@@ -85,11 +149,24 @@
       </div>
     </div>
   </div>
-  <div id="maskContainer" style="display: none;">
-  <img id="maskImage" src="" alt="Mask Image" style="max-width: 100%; height: auto;">
+  <div id="maskContainer" class="mask-container" style="display: none;">
+    <img id="maskImage" class="mask-image" src="" alt="Mask Image">
+    <div class="image-selection-container">
+      <h3>請選擇球組顏色</h3>
+      <div id="imageSelection">
+        <label class="image-option">
+          <input type="radio" name="imageOption" value="1" checked>
+          <img src="./balls/9-balls.jpg" alt="Image 1">
+        </label>
+        <label class="image-option">
+          <input type="radio" name="imageOption" value="2">
+          <img src="./balls2/9-balls.jpg" alt="Image 2">
+        </label>
+      </div>
+      <button id="confirmMaskBtn">確定mask</button>
+    </div>
   </div>
 </div>
 <script src="script.js"></script>
 </body>
 </html>
-

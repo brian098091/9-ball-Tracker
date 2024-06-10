@@ -96,7 +96,7 @@ class View:
             """
             if math.radians(60) < line[0][1] < math.radians(120):
                 # horizontal line
-                if line[0][0] < filtered.shape[0] / 2:
+                if line[0][0] < filtered.shape[0] *2/5:
                     return bound_num == 0
                 else:
                     return bound_num == 1
@@ -111,7 +111,7 @@ class View:
         bounds = []
         for bound_num in range(4):
             done = False
-            min_thresh = 100
+            min_thresh = 50
             max_thresh = 500
             last_res = None
             while not done:
@@ -149,7 +149,7 @@ class View:
                             res.append(line)
                 print(thresh, len(res))
                 if len(res) > 0:
-                    last_res = res
+                    last_res = copy.copy(res)
                 if len(res) < 1:
                     max_thresh = thresh - 1
                 elif len(res) > 1:

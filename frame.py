@@ -182,7 +182,7 @@ class Frame:
                     cv2.FONT_HERSHEY_SIMPLEX,1, (255, 255, 255), 1, cv2.LINE_AA)
             log.log_image(cpframe, 'res')
 
-        return balls
+        return ball_res
     
     def findBalls_cc(self, hsv_list, log_images=False):
         # hsv_list: each element [i, mn, mx] means
