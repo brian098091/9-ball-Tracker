@@ -151,7 +151,7 @@ class View:
                             res.append(line)
                 print(thresh, len(res))
                 if len(res) > 0:
-                    last_res = res
+                    last_res = copy.copy(res)
                 if len(res) < 1:
                     max_thresh = thresh - 1
                 elif len(res) > 1:

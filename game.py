@@ -18,7 +18,7 @@ class Game():
         self.height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         self.tcrange = [] # table color range
-        self.frame_count = (self.vidlen - 1) // sample_rate + 1
+        self.frame_count = (self.vidlen+sample_rate-1) // sample_rate
         self.frames = np.empty(self.frame_count, dtype=object)
 
     def set_tcrange_ff(self, 
@@ -99,7 +99,8 @@ class Game():
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             bmask = cv2.inRange(frame, *self.tcrange)
             rate = calc_rate(bmask)
-            frames_no[idx] = cap.get(cv2.CAP_PROP_POS_FRAMES)
+            frames_no[idx] = cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
+            # print(frames_no[idx])
             rates[idx] = rate
 
             # Update views
@@ -172,6 +173,8 @@ class Game():
         for i, r in enumerate(rates):
             vidcap.set(cv2.CAP_PROP_POS_FRAMES, frames_no[i])
             ret, frame = vidcap.read()
+            if not ret:
+                print(frames_no[i], vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
             assert ret
             frame_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             bmask = cv2.inRange(frame_HSV, *self.tcrange)
@@ -184,31 +187,34 @@ class Game():
                 if j == len(views)-1: 
                     self.frames[i] = Frame(frames_no[i], None, frame_HSV)
     
-    def proc_frames(self, ball_dists):
+    def proc_frames(self, ball_dists, log_images=False):
+        if log_images:
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter('./tmpOutput/res.mp4', fourcc, 20, (self.width, self.height))
+
         for fobj in self.frames:
             if fobj.view == None:
                 continue # Not interesting
-            fobj.findBalls(ball_dists, True)
-            
-            continue
-            hsv_list = [
-                [3, [120, 150, 100], [180, 255, 240]],
-                [1, [25, 150, 160], [35, 255, 255]],
-                [8, [0, 0, 0], [255, 255, 50]],
-                [0, [0, 0, 0], [255, 30, 255]],
-                [7, [100, 100, 128], [150, 200, 255]]
-            ]
-            for tt in hsv_list:
-                tt[1] = np.array(tt[1], dtype=np.uint8)
-                tt[2] = np.array(tt[2], dtype=np.uint8)
-            fobj.findBalls_cc(hsv_list, True)
+            balls = fobj.findBalls(ball_dists, True)
+
+            if log_images:
+                cpframe = cv2.cvtColor(fobj.frame, cv2.COLOR_HSV2BGR)
+                for i, ball in enumerate(balls):
+                    if ball == None: continue
+                    cv2.circle(cpframe, *ball, (0, 0, 255), 1)
+                    cv2.putText(cpframe, str(i), ball[0], 
+                        cv2.FONT_HERSHEY_SIMPLEX,1, (255, 255, 255), 1, cv2.LINE_AA)
+                out.write(cpframe)
+        
+        if log_images:
+            out.release()
 
 
 if __name__ == '__main__':
     j = cv2.imread('resources/2022_APP_2_000.jpg')
     j = cv2.cvtColor(j, cv2.COLOR_BGR2HSV)
     vidcap = cv2.VideoCapture('./resources/2022_APP_2.mp4')
-    g = Game(vidcap, 100) # 4
+    g = Game(vidcap, 1) # 4
     ret=g.set_tcrange_ff(j, (520, 520), gap=np.array([10,15,15], dtype='uint8')) # (112, 220)
     print('Please wait, 3Q')
 
@@ -278,5 +284,5 @@ if __name__ == '__main__':
         ball_dists.append([h,s,v])
     # ball_dists.shape == (10, 3, 180/256)
 
-    g.proc_frames(ball_dists)
+    g.proc_frames(ball_dists, True)
     
